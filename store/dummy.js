@@ -10,9 +10,7 @@ const get = async (table, id) => {
 const update = async (table, data) => {
   db[table].push(data);
 };
-const remove = async (table, id) => {
-  return true;
-};
+const remove = async (table, id) => true;
 
 module.exports = {
   list,
