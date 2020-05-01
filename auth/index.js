@@ -13,10 +13,10 @@ const verify = (token) => jwt.verify(token, secret);
 function getToken(auth) {
   console.log(auth);
   if (!auth) {
-    throw new Error('Come without token');
+    throw err('Come without token', 401);
   }
   if (auth.indexOf('Bearer ') === -1) {
-    throw new Error('Invalid format');
+    throw err('Invalid format', 401);
   }
   const token = auth.replace('Bearer ', '');
   return token;
@@ -33,12 +33,16 @@ function decodeHeader(req) {
 }
 
 const check = {
-  own(req, owner) {
+  own: async (req, owner) => {
     const decoded = decodeHeader(req);
-    console.log(decoded);
-
     if (decoded.id !== owner) {
       throw err('You dont have permission for do it', 401);
+    }
+  },
+  logged: (req) => {
+    const decoded = decodeHeader(req);
+    if (!decoded) {
+      throw err('You have to logged for do it', 401);
     }
   },
 };

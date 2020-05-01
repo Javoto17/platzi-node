@@ -2,7 +2,7 @@
 
 const bcrypt = require('bcrypt');
 
-const store = require('../../../store/dummy');
+const store = require('../../../store/mysql');
 
 const auth = require('../../../auth');
 
@@ -17,16 +17,20 @@ module.exports = (injectedStore) => {
 
   const login = async (username, password) => {
     const data = await store.query(table, { username });
-    console.log('data', data);
 
-    return bcrypt.compare(password, data.password).then((equals) => {
-      if (equals === true) {
-        return auth.sign(data);
-      }
-      throw new Error('Data invalid');
-    }, () => {
-      throw new Error('Data invalid');
-    });
+    const user = { ...data[0] };
+
+    return bcrypt.compare(password, user.password).then(
+      (equals) => {
+        if (equals === true) {
+          return auth.sign(user);
+        }
+        throw new Error('Data invalid');
+      },
+      () => {
+        throw new Error('Error bcrypt');
+      },
+    );
   };
 
   const upsert = async (data) => {

@@ -1,5 +1,5 @@
 const nanoid = require('nanoid');
-const store = require('../../../store/dummy');
+const store = require('../../../store/mysql');
 
 const auth = require('../auth');
 
@@ -12,23 +12,22 @@ module.exports = (injectedStore) => {
     db = store;
   }
 
-  const list = () => store.list(table);
+  const list = () => db.list(table);
 
-  const getUserById = (id) => store.get(table, id);
+  const getUserById = (id) => db.get(table, id);
 
   const deleteUserById = (id) => {
     if (!id) {
       throw Error;
     }
 
-    return store.remove(table, id);
+    return db.remove(table, id);
   };
 
   const addUser = async (body) => {
     const user = {
       username: body.username,
       name: body.name,
-      password: body.password,
     };
 
     if (body.id) {
@@ -41,11 +40,28 @@ module.exports = (injectedStore) => {
       await auth.upsert({
         id: user.id,
         username: user.username,
-        password: user.password,
+        password: body.password,
       });
     }
 
-    return store.upsert(table, user);
+    return db.upsert(table, user);
+  };
+
+  const followUser = (from, to) => {
+    return store.upsert(`${table}_follow`, {
+      user_from: from,
+      user_to: to,
+    });
+  };
+
+  const getFollowing = (user) => {
+    const join = {
+      [table]: 'user_to',
+    };
+
+    const query = { user_from: user };
+
+    return db.query(`${table}_follow`, query, join);
   };
 
   return {
@@ -53,5 +69,7 @@ module.exports = (injectedStore) => {
     getUserById,
     deleteUserById,
     addUser,
+    followUser,
+    getFollowing,
   };
 };

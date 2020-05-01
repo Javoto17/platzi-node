@@ -6,56 +6,71 @@ const controller = require('./index');
 
 const router = express.Router();
 
-const list = async (req, res) => {
+const list = async (req, res, next) => {
   try {
     const listOfUsers = await controller.list();
     response.success(req, res, listOfUsers, 200);
   } catch (error) {
-    response.success(req, res, error.message, 200);
+    next(error);
   }
 };
 
-
-const upsert = async (req, res) => {
+const upsert = async (req, res, next) => {
   try {
     const { body } = req;
     const userAdded = await controller.addUser(body);
     response.success(req, res, userAdded, 200);
   } catch (error) {
-    response.success(req, res, error.message, 200);
+    next(error);
   }
 };
 
-
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = controller.getUserById(id);
+    const user = await controller.getUserById(id);
     response.success(req, res, user, 200);
   } catch (error) {
-    response.success(req, res, error.message, 200);
+    next(error);
   }
 };
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = controller.deleteUserById(id);
+    const user = await controller.deleteUserById(id);
     response.success(req, res, user, 200);
   } catch (error) {
-    response.success(req, res, error.message, 200);
+    next(error);
+  }
+};
+
+const followUser = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const followId = req.params.id;
+    const followed = await controller.followUser(userId, followId);
+    response.success(req, res, followed, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getFollowing = async (req, res, next) => {
+  try {
+    const following = await controller.getFollowing(req.params.id);
+    response.success(req, res, following, 200);
+  } catch (error) {
+    next(error);
   }
 };
 
 router.get('/', list);
+router.put('/', secure('update'), upsert);
+router.post('/', upsert);
 router.get('/:id', getUser);
 router.delete('/:id', deleteUser);
-router.post('/', upsert);
-router.put('/', secure('update'), upsert);
-
-// router.get('/:id', (req, res) => {
-//   const user = controller.get(req.params.id);
-//   response.success(req, res, controller.list(), 200);
-// });
+router.get('/:id/following/', secure('follow'), getFollowing);
+router.post('/follow/:id/', secure('follow'), followUser);
 
 module.exports = router;
