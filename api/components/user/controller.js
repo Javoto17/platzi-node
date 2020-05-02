@@ -27,6 +27,8 @@ module.exports = (injectedStore, injectedCache) => {
     } else {
       console.log('Searching users in db');
     }
+
+    return users;
   };
 
   const getUserById = async (id) => {
@@ -39,6 +41,8 @@ module.exports = (injectedStore, injectedCache) => {
     } else {
       console.log('Searching user in db');
     }
+
+    return user;
   };
 
   const deleteUserById = (id) => {
