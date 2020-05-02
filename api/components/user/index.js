@@ -1,6 +1,16 @@
 const ctrl = require('./controller');
 
 // const store = require('../../../store/mysql');
-const store = require('../../../mysql/remote-mysql');
+const config = require('../../../config');
 
-module.exports = ctrl(store);
+const store =
+  config.remoteDB === true
+    ? require('../../../store/remote-mysql')
+    : require('../../../store/mysql');
+
+const cache =
+  config.remoteDB === true
+    ? require('../../../store/remote-cache')
+    : require('../../../store/redis');
+
+module.exports = ctrl(store, cache);

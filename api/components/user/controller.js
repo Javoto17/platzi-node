@@ -5,16 +5,41 @@ const auth = require('../auth');
 
 const table = 'user';
 
-module.exports = (injectedStore) => {
+module.exports = (injectedStore, injectedCache) => {
   let db = injectedStore;
+  let cache = injectedCache;
 
   if (!db) {
     db = store;
   }
 
-  const list = () => db.list(table);
+  if (!cache) {
+    cache = store;
+  }
 
-  const getUserById = (id) => db.get(table, id);
+  const list = async () => {
+    let users = await cache.list(table);
+
+    if (!users) {
+      console.log('Searching users in cache');
+      users = await db.list(table);
+      cache.upsert(table, users);
+    } else {
+      console.log('Searching users in db');
+    }
+  };
+
+  const getUserById = async (id) => {
+    let user = await cache.get(table, id);
+
+    if (!user) {
+      console.log('Searching user in cache');
+      user = await db.get(table, id);
+      cache.upsert(table, user);
+    } else {
+      console.log('Searching user in db');
+    }
+  };
 
   const deleteUserById = (id) => {
     if (!id) {
